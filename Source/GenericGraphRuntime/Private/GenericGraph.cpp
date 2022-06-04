@@ -18,11 +18,6 @@ UGenericGraph::UGenericGraph()
 #endif
 }
 
-UGenericGraph::~UGenericGraph()
-{
-
-}
-
 void UGenericGraph::Print(bool ToConsole /*= true*/, bool ToScreen /*= true*/)
 {
 	int Level = 0;
@@ -50,7 +45,11 @@ void UGenericGraph::Print(bool ToConsole /*= true*/, bool ToScreen /*= true*/)
 
 			for (int j = 0; j < Node->ChildrenNodes.Num(); ++j)
 			{
-				NextLevelNodes.Add(Node->ChildrenNodes[j]);
+				//-----------------------------------------------------------------------------
+				// Torbie Begin Change
+				NextLevelNodes.Add(Node->ChildrenNodes[j].Node);
+				// Torbie End Change
+				//-----------------------------------------------------------------------------
 			}
 		}
 
@@ -75,7 +74,11 @@ int UGenericGraph::GetLevelNum() const
 
 			for (int j = 0; j < Node->ChildrenNodes.Num(); ++j)
 			{
-				NextLevelNodes.Add(Node->ChildrenNodes[j]);
+				//-----------------------------------------------------------------------------
+				// Torbie Begin Change
+				NextLevelNodes.Add(Node->ChildrenNodes[j].Node);
+				// Torbie End Change
+				//-----------------------------------------------------------------------------
 			}
 		}
 
@@ -106,7 +109,11 @@ void UGenericGraph::GetNodesByLevel(int Level, TArray<UGenericGraphNode*>& Nodes
 
 			for (int j = 0; j < Node->ChildrenNodes.Num(); ++j)
 			{
-				NextLevelNodes.Add(Node->ChildrenNodes[j]);
+				//-----------------------------------------------------------------------------
+				// Torbie Begin Change
+				NextLevelNodes.Add(Node->ChildrenNodes[j].Node);
+				// Torbie End Change
+				//-----------------------------------------------------------------------------
 			}
 		}
 
@@ -125,7 +132,6 @@ void UGenericGraph::ClearGraph()
 		{
 			Node->ParentNodes.Empty();
 			Node->ChildrenNodes.Empty();
-			Node->Edges.Empty();
 		}
 	}
 

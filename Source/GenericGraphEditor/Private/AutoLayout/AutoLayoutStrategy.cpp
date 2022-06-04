@@ -43,7 +43,11 @@ FBox2D UAutoLayoutStrategy::GetActualBounds(UGenericGraphNode* RootNode)
 
 			for (int j = 0; j < Node->ChildrenNodes.Num(); ++j)
 			{
-				NextLevelNodes.Add(Node->ChildrenNodes[j]);
+				//-----------------------------------------------------------------------------
+				// Torbie Begin Change
+				NextLevelNodes.Add(Node->ChildrenNodes[j].Node);
+				// Torbie End Change
+				//-----------------------------------------------------------------------------
 			}
 		}
 
@@ -74,7 +78,11 @@ void UAutoLayoutStrategy::RandomLayoutOneTree(UGenericGraphNode* RootNode, const
 
 			for (int j = 0; j < Node->ChildrenNodes.Num(); ++j)
 			{
-				NextLevelNodes.Add(Node->ChildrenNodes[j]);
+				//-----------------------------------------------------------------------------
+				// Torbie Begin Change
+				NextLevelNodes.Add(Node->ChildrenNodes[j].Node);
+				// Torbie End Change
+				//-----------------------------------------------------------------------------
 			}
 		}
 

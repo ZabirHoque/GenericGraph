@@ -64,11 +64,19 @@ void UTreeLayoutStrategy::InitPass(UGenericGraphNode* RootNode, const FVector2D&
 	FVector2D ChildAnchor(FVector2D(0.f, GetNodeHeight(EdNode_RootNode) + OptimalDistance + Anchor.Y));
 	for (int32 i = 0; i < RootNode->ChildrenNodes.Num(); ++i)
 	{
-		UGenericGraphNode* Child = RootNode->ChildrenNodes[i];
+		//-----------------------------------------------------------------------------
+		// Torbie Begin Change
+		UGenericGraphNode* Child = RootNode->ChildrenNodes[i].Node;
+		// Torbie End Change
+		//-----------------------------------------------------------------------------
 		UEdNode_GenericGraphNode* EdNode_ChildNode = EdGraph->NodeMap[Child];
 		if (i > 0)
 		{
-			UGenericGraphNode* PreChild = RootNode->ChildrenNodes[i - 1];
+			//-----------------------------------------------------------------------------
+			// Torbie Begin Change
+			UGenericGraphNode* PreChild = RootNode->ChildrenNodes[i - 1].Node;
+			// Torbie End Change
+			//-----------------------------------------------------------------------------
 			UEdNode_GenericGraphNode* EdNode_PreChildNode = EdGraph->NodeMap[PreChild];
 			ChildAnchor.X += OptimalDistance + GetNodeWidth(EdNode_PreChildNode) / 2;
 		}
@@ -94,7 +102,11 @@ bool UTreeLayoutStrategy::ResolveConflictPass(UGenericGraphNode* Node)
 	bool HasConflict = false;
 	for (int32 i = 0; i < Node->ChildrenNodes.Num(); ++i)
 	{
-		UGenericGraphNode* Child = Node->ChildrenNodes[i];
+		//-----------------------------------------------------------------------------
+		// Torbie Begin Change
+		UGenericGraphNode* Child = Node->ChildrenNodes[i].Node;
+		// Torbie End Change
+		//-----------------------------------------------------------------------------
 		if (ResolveConflictPass(Child))
 		{
 			HasConflict = true;
@@ -103,10 +115,18 @@ bool UTreeLayoutStrategy::ResolveConflictPass(UGenericGraphNode* Node)
 
 	for (int32 i = 0; i < Node->ParentNodes.Num(); ++i)
 	{
-		UGenericGraphNode* ParentNode = Node->ParentNodes[i];
+		//-----------------------------------------------------------------------------
+		// Torbie Begin Change
+		UGenericGraphNode* ParentNode = Node->ParentNodes[i].Node;
+		// Torbie End Change
+		//-----------------------------------------------------------------------------
 		for (int32 j = 0; j < ParentNode->ChildrenNodes.Num(); ++j)
 		{
-			UGenericGraphNode* LeftSibling = ParentNode->ChildrenNodes[j];
+			//-----------------------------------------------------------------------------
+			// Torbie Begin Change
+			UGenericGraphNode* LeftSibling = ParentNode->ChildrenNodes[j].Node;
+			// Torbie End Change
+			//-----------------------------------------------------------------------------
 			if (LeftSibling == Node)
 				break;
 			if (ResolveConflict(LeftSibling, Node))
@@ -146,20 +166,24 @@ bool UTreeLayoutStrategy::ResolveConflict(UGenericGraphNode* LRoot, UGenericGrap
 	{
 		ShiftSubTree(RRoot, FVector2D(MaxOverlapDistance, 0.f));
 
-		TArray<UGenericGraphNode*> ParentNodes = RRoot->ParentNodes;
-		TArray<UGenericGraphNode*> NextParentNodes;
+		//-----------------------------------------------------------------------------
+		// Torbie Begin Change
+		TArray<FGenericGraphConnection> ParentNodes = RRoot->ParentNodes;
+		TArray<FGenericGraphConnection> NextParentNodes;
 		while (ParentNodes.Num() != 0)
 		{
 			for (int32 i = 0; i < ParentNodes.Num(); ++i)
 			{
-				UpdateParentNodePosition(ParentNodes[i]);
+				UpdateParentNodePosition(ParentNodes[i].Node);
 
-				NextParentNodes.Append(ParentNodes[i]->ParentNodes);
+				NextParentNodes.Append(ParentNodes[i].Node->ParentNodes);
 			}
 
 			ParentNodes = NextParentNodes;
 			NextParentNodes.Reset();
 		}
+		// Torbie End Change
+		//-----------------------------------------------------------------------------
 
 		return true;
 	}
@@ -183,7 +207,11 @@ void UTreeLayoutStrategy::GetLeftContour(UGenericGraphNode* RootNode, int32 Leve
 
 	for (int32 i = 0; i < RootNode->ChildrenNodes.Num(); ++i)
 	{
-		GetLeftContour(RootNode->ChildrenNodes[i], Level + 1, Contour);
+		//-----------------------------------------------------------------------------
+		// Torbie Begin Change
+		GetLeftContour(RootNode->ChildrenNodes[i].Node, Level + 1, Contour);
+		// Torbie End Change
+		//-----------------------------------------------------------------------------
 	}
 }
 
@@ -201,7 +229,11 @@ void UTreeLayoutStrategy::GetRightContour(UGenericGraphNode* RootNode, int32 Lev
 
 	for (int32 i = 0; i < RootNode->ChildrenNodes.Num(); ++i)
 	{
-		GetRightContour(RootNode->ChildrenNodes[i], Level + 1, Contour);
+		//-----------------------------------------------------------------------------
+		// Torbie Begin Change
+		GetRightContour(RootNode->ChildrenNodes[i].Node, Level + 1, Contour);
+		// Torbie End Change
+		//-----------------------------------------------------------------------------
 	}
 }
 
@@ -213,29 +245,37 @@ void UTreeLayoutStrategy::ShiftSubTree(UGenericGraphNode* RootNode, const FVecto
 
 	for (int32 i = 0; i < RootNode->ChildrenNodes.Num(); ++i)
 	{
-		UGenericGraphNode* Child = RootNode->ChildrenNodes[i];
+		//-----------------------------------------------------------------------------
+		// Torbie Begin Change
+		FGenericGraphConnection Child = RootNode->ChildrenNodes[i];
 
-		if (Child->ParentNodes[0] == RootNode)
+		if (Child.Node->ParentNodes[0].Node == RootNode)
 		{
-			ShiftSubTree(RootNode->ChildrenNodes[i], Offset);
+			ShiftSubTree(RootNode->ChildrenNodes[i].Node, Offset);
 		}
+		// Torbie End Change
+		//-----------------------------------------------------------------------------
 	}
 }
 
 void UTreeLayoutStrategy::UpdateParentNodePosition(UGenericGraphNode* ParentNode)
 {
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
 	UEdNode_GenericGraphNode* EdNode_ParentNode = EdGraph->NodeMap[ParentNode];
 	if (ParentNode->ChildrenNodes.Num() % 2 == 0)
 	{
-		UEdNode_GenericGraphNode* FirstChild = EdGraph->NodeMap[ParentNode->ChildrenNodes[0]];
-		UEdNode_GenericGraphNode* LastChild = EdGraph->NodeMap[ParentNode->ChildrenNodes.Last()];
+		UEdNode_GenericGraphNode* FirstChild = EdGraph->NodeMap[ParentNode->ChildrenNodes[0].Node];
+		UEdNode_GenericGraphNode* LastChild = EdGraph->NodeMap[ParentNode->ChildrenNodes.Last().Node];
 		float LeftBound = FirstChild->NodePosX;
 		float RightBound = LastChild->NodePosX + GetNodeWidth(LastChild);
 		EdNode_ParentNode->NodePosX = (LeftBound + RightBound) / 2 - GetNodeWidth(EdNode_ParentNode) / 2;
 	}
 	else
 	{
-		UEdNode_GenericGraphNode* MidChild = EdGraph->NodeMap[ParentNode->ChildrenNodes[ParentNode->ChildrenNodes.Num() / 2]];
+		UEdNode_GenericGraphNode* MidChild = EdGraph->NodeMap[ParentNode->ChildrenNodes[ParentNode->ChildrenNodes.Num() / 2].Node];
 		EdNode_ParentNode->NodePosX = MidChild->NodePosX + GetNodeWidth(MidChild) / 2 - GetNodeWidth(EdNode_ParentNode) / 2;
 	}
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 }

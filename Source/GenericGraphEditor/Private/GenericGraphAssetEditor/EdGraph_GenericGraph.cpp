@@ -44,7 +44,10 @@ void UEdGraph_GenericGraph::RebuildGenericGraph()
 
 				for (int LinkToIdx = 0; LinkToIdx < Pin->LinkedTo.Num(); ++LinkToIdx)
 				{
+					//-----------------------------------------------------------------------------
+					// Torbie Begin Change
 					UGenericGraphNode* ChildNode = nullptr;
+					UGenericGraphEdge* EdgeNode = nullptr;
 					if (UEdNode_GenericGraphNode* EdNode_Child = Cast<UEdNode_GenericGraphNode>(Pin->LinkedTo[LinkToIdx]->GetOwningNode()))
 					{
 						ChildNode = EdNode_Child->GenericGraphNode;
@@ -56,18 +59,22 @@ void UEdGraph_GenericGraph::RebuildGenericGraph()
 						{
 							ChildNode = Child->GenericGraphNode;
 						}
+
+						EdgeNode = EdNode_Edge->GenericGraphEdge;
 					}
 
 					if (ChildNode != nullptr)
 					{
-						GenericGraphNode->ChildrenNodes.Add(ChildNode);
+						GenericGraphNode->ChildrenNodes.Add({ChildNode, EdgeNode});
 
-						ChildNode->ParentNodes.Add(GenericGraphNode);
+						ChildNode->ParentNodes.Add({GenericGraphNode, EdgeNode});
 					}
 					else
 					{
 						LOG_ERROR(TEXT("UEdGraph_GenericGraph::RebuildGenericGraph can't find child node"));
 					}
+					// Torbie End Change
+					//-----------------------------------------------------------------------------
 				}
 			}
 		}
@@ -89,7 +96,6 @@ void UEdGraph_GenericGraph::RebuildGenericGraph()
 			Edge->Rename(nullptr, Graph, REN_DontCreateRedirectors | REN_DoNotDirty);
 			Edge->StartNode = StartNode->GenericGraphNode;
 			Edge->EndNode = EndNode->GenericGraphNode;
-			Edge->StartNode->Edges.Add(Edge->EndNode, Edge);
 		}
 	}
 
@@ -151,7 +157,6 @@ void UEdGraph_GenericGraph::Clear()
 			{
 				GenericGraphNode->ParentNodes.Reset();
 				GenericGraphNode->ChildrenNodes.Reset();
-				GenericGraphNode->Edges.Reset();
 			}
 		}
 	}
@@ -164,29 +169,44 @@ void UEdGraph_GenericGraph::SortNodes(UGenericGraphNode* RootNode)
 	TArray<UGenericGraphNode*> NextLevelNodes;
 	TSet<UGenericGraphNode*> Visited;
 
+	//-------------------------------------------------------------------------
+	// Torbie begin change
+	TSet<UGenericGraphNode*> Visited;
+	// Torbie end change
+	//-------------------------------------------------------------------------
+
 	while (CurrLevelNodes.Num() != 0)
 	{
 		int32 LevelWidth = 0;
 		for (int i = 0; i < CurrLevelNodes.Num(); ++i)
 		{
+			//-----------------------------------------------------------------------------
+			// Torbie Begin Change
 			UGenericGraphNode* Node = CurrLevelNodes[i];
 			Visited.Add(Node);
 
-			auto Comp = [&](const UGenericGraphNode& L, const UGenericGraphNode& R)
+			auto Comp = [&](const FGenericGraphConnection& L, const FGenericGraphConnection& R)
 			{
-				UEdNode_GenericGraphNode* EdNode_LNode = NodeMap[&L];
-				UEdNode_GenericGraphNode* EdNode_RNode = NodeMap[&R];
+				UEdNode_GenericGraphNode* EdNode_LNode = NodeMap[L.Node];
+				UEdNode_GenericGraphNode* EdNode_RNode = NodeMap[R.Node];
 				return EdNode_LNode->NodePosX < EdNode_RNode->NodePosX;
 			};
+			// Torbie End Change
+			//-----------------------------------------------------------------------------
 
 			Node->ChildrenNodes.Sort(Comp);
 			Node->ParentNodes.Sort(Comp);
 
 			for (int j = 0; j < Node->ChildrenNodes.Num(); ++j)
 			{
-				UGenericGraphNode* ChildNode = Node->ChildrenNodes[j];
-				if(!Visited.Contains(ChildNode))
-					NextLevelNodes.Add(Node->ChildrenNodes[j]);
+				//-------------------------------------------------------------------------
+				// Torbie begin change
+				if (!Visited.Contains(Node->ChildrenNodes[j].Node))
+				{	
+					NextLevelNodes.Add(Node->ChildrenNodes[j].Node);
+				}
+				// Torbie end change
+				//-------------------------------------------------------------------------
 			}
 		}
 

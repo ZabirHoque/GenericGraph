@@ -6,6 +6,11 @@
 
 class UGenericGraph;
 class UGenericGraphEdge;
+//-----------------------------------------------------------------------------
+// Torbie Begin Change
+class UGenericGraphNode;
+// Torbie End Change
+//-----------------------------------------------------------------------------
 
 UENUM(BlueprintType)
 enum class ENodeLimit : uint8
@@ -13,6 +18,39 @@ enum class ENodeLimit : uint8
 	Unlimited,
     Limited
 };
+
+//-----------------------------------------------------------------------------
+// Torbie Begin Change
+USTRUCT(BlueprintType)
+struct FGenericGraphConnection
+{
+	GENERATED_BODY()
+
+	FGenericGraphConnection(
+		) = default;
+
+	FGenericGraphConnection(
+		UGenericGraphNode* InNode,
+		UGenericGraphEdge* InEdge 
+		)
+		: Node(InNode)
+		  , Edge(InEdge)
+	{
+	}
+		
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GenericGraphNode")
+	UGenericGraphNode* Node = nullptr;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GenericGraphNode")
+	UGenericGraphEdge* Edge = nullptr;
+
+	friend bool operator==(const FGenericGraphConnection& a, const FGenericGraphConnection& b)
+	{
+		return a.Node == b.Node && a.Edge == b.Edge;
+	}
+};
+// Torbie End Change
+//-----------------------------------------------------------------------------
 
 
 UCLASS(Blueprintable)
@@ -22,22 +60,19 @@ class GENERICGRAPHRUNTIME_API UGenericGraphNode : public UObject
 
 public:
 	UGenericGraphNode();
-	virtual ~UGenericGraphNode();
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "GenericGraphNode")
 	UGenericGraph* Graph;
 
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
 	UPROPERTY(BlueprintReadOnly, Category = "GenericGraphNode")
-	TArray<UGenericGraphNode*> ParentNodes;
+	TArray<FGenericGraphConnection> ParentNodes;
 
 	UPROPERTY(BlueprintReadOnly, Category = "GenericGraphNode")
-	TArray<UGenericGraphNode*> ChildrenNodes;
-
-	UPROPERTY(BlueprintReadOnly, Category = "GenericGraphNode")
-	TMap<UGenericGraphNode*, UGenericGraphEdge*> Edges;
-
-	UFUNCTION(BlueprintCallable, Category = "GenericGraphNode")
-	virtual UGenericGraphEdge* GetEdge(UGenericGraphNode* ChildNode);
+	TArray<FGenericGraphConnection> ChildrenNodes;
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 
 	UFUNCTION(BlueprintCallable, Category = "GenericGraphNode")
 	bool IsLeafNode() const;
@@ -63,18 +98,24 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor")
 	FText ContextMenuName;
 
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
+	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor", meta = (ClampMin = "0",EditCondition = "ParentLimitType == ENodeLimit::Limited", EditConditionHides))
+	int32 ParentLimit = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor", meta = (ClampMin = "0",EditCondition = "ChildrenLimitType == ENodeLimit::Limited", EditConditionHides))
+	int32 ChildrenLimit = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor", meta = (DisplayBefore = "ParentLimit"))
+	ENodeLimit ParentLimitType = ENodeLimit::Unlimited;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor", meta = (DisplayBefore = "ChildrenLimit"))
+	ENodeLimit ChildrenLimitType = ENodeLimit::Unlimited;
+
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor")
-	ENodeLimit ParentLimitType;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor" ,meta = (ClampMin = "0",EditCondition = "ParentLimitType == ENodeLimit::Limited", EditConditionHides))
-	int32 ParentLimit;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor")
-	ENodeLimit ChildrenLimitType;
-
-	UPROPERTY(EditDefaultsOnly, Category = "GenericGraphNode_Editor" ,meta = (ClampMin = "0",EditCondition = "ChildrenLimitType == ENodeLimit::Limited", EditConditionHides))
-	int32 ChildrenLimit;
-	
+	uint8 bEdgesEnabled : 1;
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 #endif
 
 #if WITH_EDITOR
@@ -90,5 +131,11 @@ public:
 
 	virtual bool CanCreateConnectionTo(UGenericGraphNode* Other, int32 NumberOfChildrenNodes, FText& ErrorMessage);
 	virtual bool CanCreateConnectionFrom(UGenericGraphNode* Other, int32 NumberOfParentNodes, FText& ErrorMessage);
+
+	//----------------------------------------------------------------------------
+	// Torbie Begin Change
+	virtual void ChildrenListChanged() {};
+	// Torbie End Change
+	//----------------------------------------------------------------------------
 #endif
 };

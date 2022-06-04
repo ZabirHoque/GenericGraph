@@ -9,6 +9,12 @@
 #endif // #if ENGINE_MAJOR_VERSION == 5
 
 class FGGAssetEditorToolbar;
+//-----------------------------------------------------------------------------
+// Torbie Begin Change
+class UAssetGraphSchema_GenericGraph;
+class UEdGraph_GenericGraph;
+// Torbie End Change
+//-----------------------------------------------------------------------------
 
 class GENERICGRAPHEDITOR_API FAssetEditor_GenericGraph : public FAssetEditorToolkit, public FNotifyHook, public FGCObject
 {
@@ -54,6 +60,25 @@ public:
 #endif // #if ENGINE_MAJOR_VERSION == 5
 
 	UGenericGraphEditorSettings* GetSettings() const;
+
+	//-------------------------------------------------------------------------
+	// Torbie Begin Change
+	void SetGraphClass(TSubclassOf<UEdGraph_GenericGraph> InGraphClass)
+	{
+		GraphClass = InGraphClass;
+	}
+
+	void SetSchemaClass(TSubclassOf<UAssetGraphSchema_GenericGraph> InSchemaClass)
+	{
+		SchemaClass = InSchemaClass;
+	}
+
+	void SetEditorCornerText(const FText& InEditorCornerText)
+	{
+		EditorCornerText = InEditorCornerText;
+	}
+	// Torbie End Change
+	//-------------------------------------------------------------------------
 
 protected:
 	TSharedRef<SDockTab> SpawnTab_Viewport(const FSpawnTabArgs& Args);
@@ -132,6 +157,14 @@ protected:
 
 	/** The command list for this editor */
 	TSharedPtr<FUICommandList> GraphEditorCommands;
+
+	//-------------------------------------------------------------------------
+	// Torbie chabge begin
+	TSubclassOf<UEdGraph_GenericGraph> GraphClass;
+	TSubclassOf<UAssetGraphSchema_GenericGraph> SchemaClass;
+	FText EditorCornerText;
+	// Torbie change end
+	//-------------------------------------------------------------------------
 };
 
 

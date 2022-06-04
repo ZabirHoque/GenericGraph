@@ -40,6 +40,13 @@ const FName FGenericGraphAssetEditorTabs::GenericGraphEditorSettingsID(TEXT("Gen
 //////////////////////////////////////////////////////////////////////////
 
 FAssetEditor_GenericGraph::FAssetEditor_GenericGraph()
+	//-------------------------------------------------------------------------
+	// Torbie change begin
+	: GraphClass(UEdGraph_GenericGraph::StaticClass())
+	, SchemaClass(UAssetGraphSchema_GenericGraph::StaticClass())
+	, EditorCornerText(LOCTEXT("AppearanceCornerText_GenericGraph", "Generic Graph"))
+	// Torbie change end
+	//-------------------------------------------------------------------------
 {
 	EditingGraph = nullptr;
 
@@ -287,7 +294,11 @@ void FAssetEditor_GenericGraph::CreateInternalWidgets()
 TSharedRef<SGraphEditor> FAssetEditor_GenericGraph::CreateViewportWidget()
 {
 	FGraphAppearanceInfo AppearanceInfo;
-	AppearanceInfo.CornerText = LOCTEXT("AppearanceCornerText_GenericGraph", "Generic Graph");
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
+	AppearanceInfo.CornerText = EditorCornerText;
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 
 	CreateCommandList();
 
@@ -322,7 +333,17 @@ void FAssetEditor_GenericGraph::CreateEdGraph()
 {
 	if (EditingGraph->EdGraph == nullptr)
 	{
-		EditingGraph->EdGraph = CastChecked<UEdGraph_GenericGraph>(FBlueprintEditorUtils::CreateNewGraph(EditingGraph, NAME_None, UEdGraph_GenericGraph::StaticClass(), UAssetGraphSchema_GenericGraph::StaticClass()));
+		//---------------------------------------------------------------------------
+		// Torbie Begin Change
+		EditingGraph->EdGraph = CastChecked<UEdGraph_GenericGraph>(FBlueprintEditorUtils::CreateNewGraph(
+			EditingGraph, 
+			NAME_None,
+			GraphClass, 
+			SchemaClass)
+			);
+		// Torbie End Change
+		//---------------------------------------------------------------------------
+
 		EditingGraph->EdGraph->bAllowDeletion = false;
 
 		// Give the schema a chance to fill out any required nodes (like the results node)
@@ -454,23 +475,19 @@ void FAssetEditor_GenericGraph::DeleteSelectedNodes()
 		if (EdNode == nullptr || !EdNode->CanUserDeleteNode())
 			continue;;
 
-		if (UEdNode_GenericGraphNode* EdNode_Node = Cast<UEdNode_GenericGraphNode>(EdNode))
-		{
-			EdNode_Node->Modify();
+		//---------------------------------------------------------------------
+		// Torbie change begin
+		EdNode->Modify();
 
-			const UEdGraphSchema* Schema = EdNode_Node->GetSchema();
-			if (Schema != nullptr)
-			{
-				Schema->BreakNodeLinks(*EdNode_Node);
-			}
-
-			EdNode_Node->DestroyNode();
-		}
-		else
+		const UEdGraphSchema* Schema = EdNode->GetSchema();
+		if (Schema)
 		{
-			EdNode->Modify();
-			EdNode->DestroyNode();
+			Schema->BreakNodeLinks(*EdNode);
 		}
+
+		EdNode->DestroyNode();
+		// Torbie change end
+		//---------------------------------------------------------------------
 	}
 }
 

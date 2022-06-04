@@ -29,6 +29,13 @@ void SEdNode_GenericGraphEdge::PerformSecondPassLayout(const TMap< UObject*, TSh
 	FGeometry StartGeom;
 	FGeometry EndGeom;
 
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
+	int32 EdgeCount = 1;
+	int32 EdgeIdx = 0;
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
+
 	UEdNode_GenericGraphNode* Start = EdgeNode->GetStartNode();
 	UEdNode_GenericGraphNode* End = EdgeNode->GetEndNode();
 	if (Start != nullptr && End != nullptr)
@@ -42,10 +49,21 @@ void SEdNode_GenericGraphEdge::PerformSecondPassLayout(const TMap< UObject*, TSh
 
 			StartGeom = FGeometry(FVector2D(Start->NodePosX, Start->NodePosY), FVector2D::ZeroVector, FromWidget->GetDesiredSize(), 1.0f);
 			EndGeom = FGeometry(FVector2D(End->NodePosX, End->NodePosY), FVector2D::ZeroVector, ToWidget->GetDesiredSize(), 1.0f);
+
+			//-----------------------------------------------------------------------------
+			// Torbie Begin Change
+			EdgeCount = Start->GetEdgeCount(End);
+			EdgeIdx = Start->GetEdgeIndex(End, EdgeNode);
+			// Torbie End Change
+			//-----------------------------------------------------------------------------
 		}
 	}
 
-	PositionBetweenTwoNodesWithOffset(StartGeom, EndGeom, 0, 1);
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
+	PositionBetweenTwoNodesWithOffset(StartGeom, EndGeom, EdgeIdx, EdgeCount);
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 }
 
 void SEdNode_GenericGraphEdge::OnNameTextCommited(const FText& InText, ETextCommit::Type CommitInfo)

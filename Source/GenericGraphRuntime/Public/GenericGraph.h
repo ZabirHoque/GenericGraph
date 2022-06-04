@@ -12,11 +12,14 @@ class GENERICGRAPHRUNTIME_API UGenericGraph : public UObject
 	GENERATED_BODY()
 
 public:
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
 	UGenericGraph();
-	virtual ~UGenericGraph();
 
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraph")
-	FString Name;
+	FText Name;
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraph")
 	TSubclassOf<UGenericGraphNode> NodeType;
@@ -24,17 +27,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraph")
 	TSubclassOf<UGenericGraphEdge> EdgeType;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GenericGraph")
-	FGameplayTagContainer GraphTags;
-
 	UPROPERTY(BlueprintReadOnly, Category = "GenericGraph")
 	TArray<UGenericGraphNode*> RootNodes;
 
 	UPROPERTY(BlueprintReadOnly, Category = "GenericGraph")
 	TArray<UGenericGraphNode*> AllNodes;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GenericGraph")
-	bool bEdgeEnabled;
 
 	UFUNCTION(BlueprintCallable, Category = "GenericGraph")
 	void Print(bool ToConsole = true, bool ToScreen = true);
@@ -47,14 +44,24 @@ public:
 
 	void ClearGraph();
 
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
 #if WITH_EDITORONLY_DATA
 	UPROPERTY()
-	class UEdGraph* EdGraph;
+	UEdGraph* EdGraph = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraph_Editor")
-	bool bCanRenameNode;
+	uint8 bCanRenameNode : 1;
 
 	UPROPERTY(EditDefaultsOnly, Category = "GenericGraph_Editor")
-	bool bCanBeCyclical;
+	uint8 bCanBeCyclical : 1;
+
+	UPROPERTY(EditDefaultsOnly, Category = "GenericGraph_Editor")
+	uint8 bAllowDuplicateEdges : 1;
 #endif
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GenericGraph", meta = (DisplayAfter="AllNodes"))
+	uint8 bEdgeEnabled : 1;
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 };

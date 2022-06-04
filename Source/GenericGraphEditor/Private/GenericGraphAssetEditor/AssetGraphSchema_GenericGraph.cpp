@@ -212,9 +212,22 @@ void UAssetGraphSchema_GenericGraph::GetGraphContextActions(FGraphContextMenuBui
 		Desc = FText::FromString(Title);
 	}
 
+	//-------------------------------------------------------------------------
+	// Torbie Begin Change
+	FText NodeActionsTitle = FText::Format(
+		LOCTEXT("GenericGraphNodeAction_Title", "{0} Nodes"), 
+		Graph->Name.IsEmptyOrWhitespace() ? LOCTEXT("GenericGraphNodeAction", "Generic Graph Nodes") : Graph->Name
+		);
+	// Torbie End Change
+	//-------------------------------------------------------------------------
+
 	if (!Graph->NodeType->HasAnyClassFlags(CLASS_Abstract))
 	{
-		TSharedPtr<FAssetSchemaAction_GenericGraph_NewNode> NewNodeAction(new FAssetSchemaAction_GenericGraph_NewNode(LOCTEXT("GenericGraphNodeAction", "Generic Graph Node"), Desc, AddToolTip, 0));
+		//---------------------------------------------------------------------
+		// Torbie Begin Change
+		TSharedPtr<FAssetSchemaAction_GenericGraph_NewNode> NewNodeAction(new FAssetSchemaAction_GenericGraph_NewNode(NodeActionsTitle, Desc, AddToolTip, 0));
+		// Torbie End Change
+		//---------------------------------------------------------------------
 		NewNodeAction->NodeTemplate = NewObject<UEdNode_GenericGraphNode>(ContextMenuBuilder.OwnerOfTemporaries);
 		NewNodeAction->NodeTemplate->GenericGraphNode = NewObject<UGenericGraphNode>(NewNodeAction->NodeTemplate, Graph->NodeType);
 		NewNodeAction->NodeTemplate->GenericGraphNode->Graph = Graph;
@@ -225,7 +238,11 @@ void UAssetGraphSchema_GenericGraph::GetGraphContextActions(FGraphContextMenuBui
 
 	for (TObjectIterator<UClass> It; It; ++It)
 	{
-		if (It->IsChildOf(Graph->NodeType) && !It->HasAnyClassFlags(CLASS_Abstract) && !Visited.Contains(*It))
+		//---------------------------------------------------------------------
+		// Torbie Begin Change
+		if (It->IsChildOf(Graph->NodeType) && !It->HasAnyClassFlags(CLASS_Abstract) && !It->HasMetaData("HideInGraphEditor") && !Visited.Contains(*It))
+		// Torbie End Change
+		//---------------------------------------------------------------------
 		{
 			TSubclassOf<UGenericGraphNode> NodeType = *It;
 
@@ -244,7 +261,11 @@ void UAssetGraphSchema_GenericGraph::GetGraphContextActions(FGraphContextMenuBui
 				Desc = FText::FromString(Title);
 			}
 
-			TSharedPtr<FAssetSchemaAction_GenericGraph_NewNode> Action(new FAssetSchemaAction_GenericGraph_NewNode(LOCTEXT("GenericGraphNodeAction", "Generic Graph Node"), Desc, AddToolTip, 0));
+			//-----------------------------------------------------------------
+			// Torbie Begin Change
+			TSharedPtr<FAssetSchemaAction_GenericGraph_NewNode> Action(new FAssetSchemaAction_GenericGraph_NewNode(NodeActionsTitle, Desc, AddToolTip, 0));
+			// Torbie End Change
+			//-----------------------------------------------------------------
 			Action->NodeTemplate = NewObject<UEdNode_GenericGraphNode>(ContextMenuBuilder.OwnerOfTemporaries);
 			Action->NodeTemplate->GenericGraphNode = NewObject<UGenericGraphNode>(Action->NodeTemplate, NodeType);
 			Action->NodeTemplate->GenericGraphNode->Graph = Graph;
@@ -332,6 +353,31 @@ const FPinConnectionResponse UAssetGraphSchema_GenericGraph::CanCreateConnection
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, LOCTEXT("PinErrorCycle", "Can't create a graph cycle"));
 	}
 
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
+	bool bAllowDuplicateEdges = false;
+	if (EdGraph)
+	{
+		bAllowDuplicateEdges = EdGraph->GetGenericGraph()->bAllowDuplicateEdges;
+	}
+
+	if (!bAllowDuplicateEdges)
+	{
+		for (const UEdGraphPin* Pin : Out->LinkedTo)
+		{
+			UEdGraphNode* EdgeNode = Pin->GetOwningNode();
+			if (UEdNode_GenericGraphEdge* EdNode_Edge = Cast<UEdNode_GenericGraphEdge>(EdgeNode))
+			{
+				if (EdNode_Edge->GetEndNode() == EdNode_In)
+				{
+					return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, LOCTEXT("PinErrorDuplicate", "Connection already exists"));
+				}
+			}
+		}
+	}
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
+
 	FText ErrorMessage;
 	if (!EdNode_Out->GenericGraphNode->CanCreateConnectionTo(EdNode_In->GenericGraphNode, EdNode_Out->GetOutputPin()->LinkedTo.Num(), ErrorMessage))
 	{
@@ -342,8 +388,11 @@ const FPinConnectionResponse UAssetGraphSchema_GenericGraph::CanCreateConnection
 		return FPinConnectionResponse(CONNECT_RESPONSE_DISALLOW, ErrorMessage);
 	}
 
-
-	if (EdNode_Out->GenericGraphNode->GetGraph()->bEdgeEnabled)
+	//-------------------------------------------------------------------------
+	// Torbie Begin Change
+	if (EdNode_Out->GenericGraphNode->GetGraph()->bEdgeEnabled && EdNode_Out->GenericGraphNode->bEdgesEnabled)
+	// Torbie End Change
+	//-------------------------------------------------------------------------
 	{
 		return FPinConnectionResponse(CONNECT_RESPONSE_MAKE_WITH_CONVERSION_NODE, LOCTEXT("PinConnect", "Connect nodes with edge"));
 	}
@@ -358,19 +407,6 @@ bool UAssetGraphSchema_GenericGraph::TryCreateConnection(UEdGraphPin* A, UEdGrap
 	// We don't actually care about the pin, we want the node that is being dragged between
 	UEdNode_GenericGraphNode* NodeA = Cast<UEdNode_GenericGraphNode>(A->GetOwningNode());
 	UEdNode_GenericGraphNode* NodeB = Cast<UEdNode_GenericGraphNode>(B->GetOwningNode());
-
-	// Check that this edge doesn't already exist
-	for (UEdGraphPin *TestPin : NodeA->GetOutputPin()->LinkedTo)
-	{
-		UEdGraphNode* ChildNode = TestPin->GetOwningNode();
-		if (UEdNode_GenericGraphEdge* EdNode_Edge = Cast<UEdNode_GenericGraphEdge>(ChildNode))
-		{
-			ChildNode = EdNode_Edge->GetEndNode();
-		}
-
-		if (ChildNode == NodeB)
-			return false;
-	}
 
 	if (NodeA && NodeB)
 	{
@@ -405,6 +441,33 @@ bool UAssetGraphSchema_GenericGraph::CreateAutomaticConversionNodeAndConnections
 	// Always create connections from node A to B, don't allow adding in reverse
 	EdgeNode->CreateConnections(NodeA, NodeB);
 
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
+	{
+		UGenericGraphEdge* Edge = EdgeNode->GenericGraphEdge;
+		ensure(Edge);
+
+		UGenericGraphNode* Src = NodeA->GenericGraphNode;
+		ensure(Src);
+
+		UGenericGraphNode* Dst = NodeB->GenericGraphNode;
+		ensure(Dst);
+
+		Edge->Graph = Graph;
+		Edge->StartNode = Src;
+		Edge->EndNode   = Dst;
+
+		ensure(Graph->bAllowDuplicateEdges || !Src->ChildrenNodes.Contains(FGenericGraphConnection{Dst, Edge}));
+		ensure(Graph->bAllowDuplicateEdges || !Dst->ParentNodes.Contains(FGenericGraphConnection{Src, Edge}));
+
+		Src->ChildrenNodes.Add({Dst, Edge});
+		Src->ChildrenListChanged();
+
+		Dst->ParentNodes.Add({Src, Edge});
+	}
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
+
 	return true;
 }
 
@@ -421,6 +484,73 @@ FLinearColor UAssetGraphSchema_GenericGraph::GetPinTypeColor(const FEdGraphPinTy
 void UAssetGraphSchema_GenericGraph::BreakNodeLinks(UEdGraphNode& TargetNode) const
 {
 	const FScopedTransaction Transaction(NSLOCTEXT("UnrealEd", "GraphEd_BreakNodeLinks", "Break Node Links"));
+
+	//-------------------------------------------------------------------------
+	// Torbie Begin
+	{
+		if (auto* EdgeNode = Cast<UEdNode_GenericGraphEdge>(&TargetNode))
+		{
+			UGenericGraphEdge* Edge = EdgeNode->GenericGraphEdge;
+			ensure(Edge);
+
+			UGenericGraphNode* Src = Edge->StartNode;
+			ensure(Src);
+
+			UGenericGraphNode* Dst = Edge->EndNode;
+			ensure(Dst);
+
+			Edge->StartNode = nullptr;
+			Edge->EndNode = nullptr;
+
+			ensure(Src->ChildrenNodes.Contains(FGenericGraphConnection{Dst, Edge}));
+			ensure(Dst->ParentNodes.Contains(FGenericGraphConnection{Src, Edge}));
+			
+			Src->ChildrenNodes.Remove({Dst, Edge});
+			Src->ChildrenListChanged();
+
+			Dst->ParentNodes.Remove({Src, Edge});
+			if (Dst->ParentNodes.Num() <= 0)
+			{
+				//Graph->RootNodes.Add(Dst);
+			}
+		}
+		else if (auto* Node = Cast<UEdNode_GenericGraphNode>(&TargetNode))
+		{
+			for (int PinIdx = 0; PinIdx < Node->Pins.Num(); ++PinIdx)
+			{
+				UEdGraphPin* Pin = Node->Pins[PinIdx];
+				for (int LinkToIdx = 0; LinkToIdx < Pin->LinkedTo.Num(); ++LinkToIdx)
+				{	;
+					if (auto* ConnectedEdge = Cast<UEdNode_GenericGraphEdge>(Pin->LinkedTo[LinkToIdx]->GetOwningNode()))
+					{
+						BreakNodeLinks(*ConnectedEdge);
+					}
+					else if (auto* ConnectedNode = Cast<UEdNode_GenericGraphNode>(Pin->LinkedTo[LinkToIdx]->GetOwningNode()))
+					{
+						UGenericGraphNode* Src = Node->GenericGraphNode;
+						ensure(Src);
+
+						UGenericGraphNode* Dst = ConnectedNode->GenericGraphNode;
+						ensure(Dst);
+						
+						ensure(Src->ChildrenNodes.Contains(FGenericGraphConnection{Dst, nullptr}));
+						ensure(Dst->ParentNodes.Contains(FGenericGraphConnection{Src, nullptr}));
+
+						Src->ChildrenNodes.Remove({Dst, nullptr});
+						Src->ChildrenListChanged();
+
+						Dst->ParentNodes.Remove({Src, nullptr});
+						if (Dst->ParentNodes.Num() <= 0)
+						{
+							//Graph->RootNodes.Add(Dst);
+						}
+					}
+				}
+			}
+		}
+	}
+	// Torbie end
+	//-------------------------------------------------------------------------
 
 	Super::BreakNodeLinks(TargetNode);
 }

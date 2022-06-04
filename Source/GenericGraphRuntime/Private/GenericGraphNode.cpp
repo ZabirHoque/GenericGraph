@@ -9,17 +9,15 @@ UGenericGraphNode::UGenericGraphNode()
 	CompatibleGraphType = UGenericGraph::StaticClass();
 
 	BackgroundColor = FLinearColor::Black;
+
+	//-------------------------------------------------------------------------
+	// Torbie Begin Change
+	bEdgesEnabled = true;
+	// Torbie End Change
+	//-------------------------------------------------------------------------
 #endif
 }
 
-UGenericGraphNode::~UGenericGraphNode()
-{
-}
-
-UGenericGraphEdge* UGenericGraphNode::GetEdge(UGenericGraphNode* ChildNode)
-{
-	return Edges.Contains(ChildNode) ? Edges.FindChecked(ChildNode) : nullptr;
-}
 
 FText UGenericGraphNode::GetDescription_Implementation() const
 {

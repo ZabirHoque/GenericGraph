@@ -35,6 +35,12 @@ public:
 	virtual UEdGraphPin* GetInputPin() const;
 	virtual UEdGraphPin* GetOutputPin() const;
 
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
+	virtual int32 GetEdgeCount(UEdNode_GenericGraphNode* ChildNode) const;
+	virtual int32 GetEdgeIndex(UEdNode_GenericGraphNode* ChildNode, UEdNode_GenericGraphEdge* EdgeNode) const;
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 #if WITH_EDITOR
 	virtual void PostEditUndo() override;
 #endif

@@ -45,10 +45,14 @@ public:
 	UEdNode_GenericGraphEdge* NodeTemplate;
 };
 
-UCLASS(MinimalAPI)
-class UAssetGraphSchema_GenericGraph : public UEdGraphSchema
+//-----------------------------------------------------------------------------
+// Torbie Begin Change
+UCLASS()
+class GENERICGRAPHEDITOR_API UAssetGraphSchema_GenericGraph : public UEdGraphSchema
 {
 	GENERATED_BODY()
+// Torbie End Change
+//-----------------------------------------------------------------------------
 
 public:
 	void GetBreakLinkToSubMenuActions(class UToolMenu* Menu, class UEdGraphPin* InGraphPin);
