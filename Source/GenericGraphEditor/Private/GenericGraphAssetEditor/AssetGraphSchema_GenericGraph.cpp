@@ -494,24 +494,28 @@ void UAssetGraphSchema_GenericGraph::BreakNodeLinks(UEdGraphNode& TargetNode) co
 			ensure(Edge);
 
 			UGenericGraphNode* Src = Edge->StartNode;
-			ensure(Src);
-
 			UGenericGraphNode* Dst = Edge->EndNode;
-			ensure(Dst);
 
 			Edge->StartNode = nullptr;
 			Edge->EndNode = nullptr;
 
-			ensure(Src->ChildrenNodes.Contains(FGenericGraphConnection{Dst, Edge}));
-			ensure(Dst->ParentNodes.Contains(FGenericGraphConnection{Src, Edge}));
-			
-			Src->ChildrenNodes.Remove({Dst, Edge});
-			Src->ChildrenListChanged();
-
-			Dst->ParentNodes.Remove({Src, Edge});
-			if (Dst->ParentNodes.Num() <= 0)
+			if (Src)
 			{
-				//Graph->RootNodes.Add(Dst);
+				ensure(Src->ChildrenNodes.Contains(FGenericGraphConnection{Dst, Edge}));
+
+				Src->ChildrenNodes.Remove({Dst, Edge});
+				Src->ChildrenListChanged();
+			}
+			
+			if (Dst)
+			{
+				ensure(Dst->ParentNodes.Contains(FGenericGraphConnection{Src, Edge}));
+
+				Dst->ParentNodes.Remove({Src, Edge});
+				if (Dst->ParentNodes.Num() <= 0)
+				{
+					//Graph->RootNodes.Add(Dst);
+				}
 			}
 		}
 		else if (auto* Node = Cast<UEdNode_GenericGraphNode>(&TargetNode))

@@ -226,6 +226,33 @@ void FAssetEditor_GenericGraph::AddReferencedObjects(FReferenceCollector& Collec
 	Collector.AddReferencedObject(EditingGraph->EdGraph);
 }
 
+//-----------------------------------------------------------------------------
+// Torbie Begin Change
+FString FAssetEditor_GenericGraph::GetReferencerName() const
+{
+	return TEXT("FAssetEditor_GenericGraph");
+}
+
+bool FAssetEditor_GenericGraph::GetReferencerPropertyName(UObject* Object, FString& OutPropertyName) const
+{
+	if (Object == EditingGraph)
+	{
+		OutPropertyName = "GenericGraph";
+	}
+	else if (Object == EditingGraph->EdGraph)
+	{
+		OutPropertyName = "EdGenericGraph";
+	}
+	else
+	{
+		return false;
+	}
+
+	return true;
+}
+// Torbie End Change
+//-----------------------------------------------------------------------------
+
 UGenericGraphEditorSettings* FAssetEditor_GenericGraph::GetSettings() const
 {
 	return GenricGraphEditorSettings;

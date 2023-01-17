@@ -47,7 +47,13 @@ public:
 
 
 	// FSerializableObject interface
-	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+	//-----------------------------------------------------------------------------
+	// Torbie Begin Change
+	void AddReferencedObjects(FReferenceCollector& Collector) override;
+	FString GetReferencerName() const override;
+	bool GetReferencerPropertyName(UObject* Object, FString& OutPropertyName) const override;
+	// Torbie End Change
+	//-----------------------------------------------------------------------------
 	// End of FSerializableObject interface
 
 #if ENGINE_MAJOR_VERSION == 5

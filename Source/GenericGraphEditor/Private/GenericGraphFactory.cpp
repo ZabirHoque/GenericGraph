@@ -5,6 +5,11 @@
 #include "ClassViewerFilter.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Kismet2/SClassPickerDialog.h"
+//-----------------------------------------------------------------------------
+// Torbie Begin Change
+#include "Kismet2/KismetEditorUtilities.h"
+// Torbie End Change
+//-----------------------------------------------------------------------------
 
 #define LOCTEXT_NAMESPACE "GenericGraphFactory"
 

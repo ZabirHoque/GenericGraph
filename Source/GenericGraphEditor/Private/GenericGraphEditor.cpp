@@ -7,6 +7,12 @@ DEFINE_LOG_CATEGORY(GenericGraphEditor)
 
 #define LOCTEXT_NAMESPACE "Editor_GenericGraph"
 
+//-----------------------------------------------------------------------------
+// Torbie Begin Change
+IMPLEMENT_MODULE(FGenericGraphEditor, GenericGraphEditor)
+// Torbie End Change
+//-----------------------------------------------------------------------------
+
 void FGenericGraphEditor::StartupModule()
 {
 	FGenericGraphEditorStyle::Initialize();
