@@ -228,11 +228,6 @@ void FAssetEditor_GenericGraph::AddReferencedObjects(FReferenceCollector& Collec
 
 //-----------------------------------------------------------------------------
 // Torbie Begin Change
-FString FAssetEditor_GenericGraph::GetReferencerName() const
-{
-	return TEXT("FAssetEditor_GenericGraph");
-}
-
 bool FAssetEditor_GenericGraph::GetReferencerPropertyName(UObject* Object, FString& OutPropertyName) const
 {
 	if (Object == EditingGraph)

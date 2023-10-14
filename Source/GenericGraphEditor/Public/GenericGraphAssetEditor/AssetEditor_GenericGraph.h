@@ -50,7 +50,6 @@ public:
 	//-----------------------------------------------------------------------------
 	// Torbie Begin Change
 	void AddReferencedObjects(FReferenceCollector& Collector) override;
-	FString GetReferencerName() const override;
 	bool GetReferencerPropertyName(UObject* Object, FString& OutPropertyName) const override;
 	// Torbie End Change
 	//-----------------------------------------------------------------------------

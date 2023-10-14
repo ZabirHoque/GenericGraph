@@ -169,12 +169,6 @@ void UEdGraph_GenericGraph::SortNodes(UGenericGraphNode* RootNode)
 	TArray<UGenericGraphNode*> NextLevelNodes;
 	TSet<UGenericGraphNode*> Visited;
 
-	//-------------------------------------------------------------------------
-	// Torbie begin change
-	TSet<UGenericGraphNode*> Visited;
-	// Torbie end change
-	//-------------------------------------------------------------------------
-
 	while (CurrLevelNodes.Num() != 0)
 	{
 		int32 LevelWidth = 0;
